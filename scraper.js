@@ -53,22 +53,21 @@ function getSql(scraper,desc,lang,callback) {
 
 function processPage(db,$,pageNo) {
 	console.log('Processing page '+pageNo);
-	// body > div > a:nth-child(3)
+	var count = 0;
 	var elements = $("a.list-group-item").each(function () {
-		var a = $(this).attr('href');
-		a = a.replace('/',''); // just once
-		var text = $(this).first('.scraper-lang').text();
-		var t = text.split('\n');
-		//for (var i=0;i<t.length;i++) {
-		//	console.log(i+'>'+t[i]);
-		//}
-		var lang = t[1];
-		var desc = t[5];
-		var sql = getSql(a,desc,lang,function(a,desc,lang,sql){
-			var value = [];
-			value.push(a,desc,lang,sql);
-			updateRow(db,value);
-		});
+		setTimeout(function(element){
+			var a = element.attr('href');
+			a = a.replace('/',''); // just once
+			var text = element.first('.scraper-lang').text();
+			var t = text.split('\n');
+			var lang = t[1];
+			var desc = t[5];
+			var sql = getSql(a,desc,lang,function(a,desc,lang,sql){
+				var value = [];
+				value.push(a,desc,lang,sql);
+				updateRow(db,value);
+			});
+		},100*count++,$(this));
 	});
 }
 
@@ -103,7 +102,9 @@ function run(db) {
 		for (var page=2;page<maxPage;page++) {
 			fetchPage("https://morph.io/scrapers/page/"+page, page, function(body,page) {
 				var $n = cheerio.load(body);
-				processPage(db,$n,page);
+				setTimeout(function(){
+					processPage(db,$n,page);
+				},10000*page);
 			});
 		}
 
